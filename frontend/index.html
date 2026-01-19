@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UIDAI AI Intelligence Platform</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/chat.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+</head>
+<body class="bg-gray-50">
+    
+    <!-- Main App Container -->
+    <div id="app">
+        <!-- Loading screen will be injected here by main.js -->
+    </div>
+
+    <!-- Main Content (Hidden initially, shown after loading) -->
+    <div id="main-content" class="hidden min-h-screen">
+        
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg">
+            <div class="container mx-auto px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="text-3xl">🔍</div>
+                        <div>
+                            <h1 class="text-2xl font-bold">UIDAI AI Intelligence Platform</h1>
+                            <p class="text-blue-100 text-sm">Real-time Biometric System Analytics</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <button 
+                            id="chat-toggle" 
+                            class="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors flex items-center space-x-2 shadow">
+                            <span>💬</span>
+                            <span>Ask AI</span>
+                            <span class="text-xs bg-blue-600 text-white px-2 py-0.5 rounded">Ctrl+K</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="container mx-auto px-6 py-8">
+            
+            <!-- Metrics Cards -->
+            <section class="mb-8">
+                <div id="metrics-container">
+                    <!-- Metrics will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Filters -->
+            <section class="mb-6">
+                <div id="filters-container" class="bg-white p-4 rounded-lg shadow">
+                    <!-- Filters will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Charts Grid -->
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                
+                <!-- State Rankings Chart -->
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <span class="mr-2">📊</span>
+                        State Performance Rankings
+                    </h2>
+                    <div style="height: 400px; position: relative;">
+                        <canvas id="statesChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Crisis Districts Chart -->
+               <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                    <span class="mr-2">⚠️</span>
+                    Top Crisis Districts
+                </h2>
+                <div style="height: 400px; position: relative;">
+                    <canvas id="crisisChart"></canvas>
+                </div>
+            </div>
+            </section>
+
+            <!-- Crisis Districts Table -->
+            <section class="mb-8">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                            <span class="mr-2">📋</span>
+                            Crisis Districts - Detailed View
+                        </h2>
+                        <span class="text-sm text-gray-600">Top 20 districts requiring urgent attention</span>
+                    </div>
+                    <div id="crisis-table">
+                        <!-- Table will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white py-6 mt-12">
+            <div class="container mx-auto px-6 text-center">
+                <p class="text-gray-300">UIDAI Hackathon 2026</p>
+                <p class="text-gray-400 text-sm mt-2">Powered by LangChain + Groq + FastAPI</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Chat Modal -->
+    <div id="chat-modal" class="hidden fixed inset-0 z-50 overflow-hidden">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+        
+        <!-- Modal Container -->
+        <div class="absolute right-0 top-0 h-full w-full md:w-2/3 lg:w-1/2 xl:w-2/5 bg-white shadow-2xl flex flex-col">
+            
+            <!-- Chat Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-2xl">
+                        🤖
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">AI Assistant</h3>
+                        <p class="text-blue-100 text-sm">Ask me anything about UIDAI data</p>
+                    </div>
+                </div>
+                <button id="chat-close" class="text-white hover:text-gray-200 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Quick Questions -->
+            <div class="bg-blue-50 px-6 py-3 border-b border-blue-100">
+                <p class="text-sm text-gray-600 mb-2 font-medium">Quick Questions:</p>
+                <div id="quick-questions" class="flex flex-wrap gap-2">
+                    <!-- Quick question buttons will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Chat Messages -->
+            <div id="chat-messages" class="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+                <!-- Messages will be added here -->
+            </div>
+
+            <!-- Chat Input -->
+            <div class="border-t border-gray-200 px-6 py-4 bg-gray-50">
+                <div class="flex items-end space-x-3">
+                    <textarea 
+                        id="chat-input" 
+                        rows="2" 
+                        placeholder="Ask a question about the data..."
+                        class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    ></textarea>
+                    <button 
+                        id="chat-send" 
+                        class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center space-x-2"
+                    >
+                        <span>Send</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">Press Enter to send, Shift+Enter for new line</p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/charts.js"></script>
+    <script src="assets/js/dashboard.js"></script>
+    <script src="assets/js/chat.js"></script>
+    <script src="assets/js/main.js"></script>
+    
+</body>
+</html>

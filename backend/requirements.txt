@@ -1,0 +1,21 @@
+# Core
+fastapi
+uvicorn[standard]
+python-dotenv
+pydantic
+python-multipart
+
+# Database
+psycopg2-binary
+sqlalchemy
+
+# LangChain
+langchain
+langchain-community
+langchain-experimental
+
+# Groq
+groq
+
+# CORS
+fastapi-cors
