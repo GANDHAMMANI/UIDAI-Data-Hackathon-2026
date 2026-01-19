@@ -94,132 +94,183 @@ async loadCrisisDistricts(limit = 30) {
     /**
      * Render metrics cards
      */
-    renderMetrics() {
-        if (!this.metrics) return;
+   /**
+ * Render metrics cards - PROFESSIONAL DESIGN
+ */
+renderMetrics() {
+    if (!this.metrics) return;
 
-        const metricsHTML = `
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Total Enrollments -->
-                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-sm font-medium">Total Enrollments</p>
-                            <p class="text-3xl font-bold text-gray-800 mt-2">
+    const metricsHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Total Enrollments -->
+            <div class="metric-card border-l-4 border-blue-500">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Enrollments</p>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <p class="text-3xl font-bold text-gray-900">
                                 ${formatLargeNumber(this.metrics.total_enrollments)}
                             </p>
-                        </div>
-                        <div class="text-blue-500">
-                            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Biometric Updates -->
-                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-sm font-medium">Biometric Updates</p>
-                            <p class="text-3xl font-bold text-gray-800 mt-2">
-                                ${formatLargeNumber(this.metrics.total_bio_updates)}
-                            </p>
-                            <p class="text-sm text-gray-600 mt-1">
-                                Ratio: <span class="font-semibold">${formatRatio(this.metrics.national_bio_ratio)}</span>
-                            </p>
-                        </div>
-                        <div class="text-yellow-500">
-                            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Crisis Districts -->
-                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-sm font-medium">Crisis Districts</p>
-                            <p class="text-3xl font-bold text-gray-800 mt-2">
-                                ${this.metrics.crisis_districts_count}
-                            </p>
-                            <p class="text-sm text-red-600 mt-1 font-semibold">
-                                Require Urgent Attention
-                            </p>
-                        </div>
-                        <div class="text-red-500">
-                            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Demographic Updates -->
-                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-sm font-medium">Demographic Updates</p>
-                            <p class="text-3xl font-bold text-gray-800 mt-2">
-                                ${formatLargeNumber(this.metrics.total_demo_updates)}
-                            </p>
-                            <p class="text-sm text-gray-600 mt-1">
-                                Ratio: <span class="font-semibold">${formatRatio(this.metrics.national_demo_ratio)}</span>
-                            </p>
-                        </div>
-                        <div class="text-green-500">
-                            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Affected Population -->
-                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-sm font-medium">Estimated Affected</p>
-                            <p class="text-3xl font-bold text-gray-800 mt-2">
-                                10-15M
-                            </p>
-                            <p class="text-sm text-gray-600 mt-1">
-                                Citizens in crisis zones
-                            </p>
-                        </div>
-                        <div class="text-purple-500">
-                            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Last Updated -->
-                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-gray-500">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-500 text-sm font-medium">Last Updated</p>
-                            <p class="text-lg font-semibold text-gray-800 mt-2">
-                                ${getTimestamp()}
-                            </p>
-                            <button onclick="dashboard.refresh()" class="text-sm text-blue-600 hover:text-blue-800 mt-2 font-medium">
-                                🔄 Refresh Data
-                            </button>
-                        </div>
-                        <div class="text-gray-500">
-                            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
+                            <p class="text-sm text-gray-600 mt-1">New Aadhaar registrations</p>
                         </div>
                     </div>
                 </div>
             </div>
-        `;
 
-        document.getElementById('metrics-container').innerHTML = metricsHTML;
-    }
+            <!-- Biometric Updates -->
+            <div class="metric-card border-l-4 border-yellow-500">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="w-10 h-10 rounded-lg bg-yellow-50 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Biometric Updates</p>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <p class="text-3xl font-bold text-gray-900">
+                                ${formatLargeNumber(this.metrics.total_bio_updates)}
+                            </p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+                                    ${formatRatio(this.metrics.national_bio_ratio)} National Avg
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Crisis Districts -->
+            <div class="metric-card border-l-4 border-red-500">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Crisis Districts</p>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <p class="text-3xl font-bold text-red-600">
+                                ${this.metrics.crisis_districts_count}
+                            </p>
+                            <p class="text-sm font-semibold text-red-600 mt-1">
+                                ⚠️ Require Urgent Action
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Demographic Updates -->
+            <div class="metric-card border-l-4 border-green-500">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Demographic Updates</p>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <p class="text-3xl font-bold text-gray-900">
+                                ${formatLargeNumber(this.metrics.total_demo_updates)}
+                            </p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                                    ${formatRatio(this.metrics.national_demo_ratio)} National Avg
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Affected Population -->
+            <div class="metric-card border-l-4 border-purple-500">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Affected Population</p>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <p class="text-3xl font-bold text-gray-900">
+                                10-15M
+                            </p>
+                            <p class="text-sm text-gray-600 mt-1">Citizens in crisis zones</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Health -->
+            <div class="metric-card border-l-4 border-blue-500">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">System Status</p>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
+                                    Live
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-600">
+                                ${getTimestamp()}
+                            </p>
+                            <button onclick="dashboard.refresh()" class="mt-3 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
+                                <svg class="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                                Refresh Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('metrics-container').innerHTML = metricsHTML;
+}
 
     /**
      * Render states chart
