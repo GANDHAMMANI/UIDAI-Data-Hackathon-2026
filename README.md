@@ -161,4 +161,4 @@ This was built for UIDAI Data Hackathon 2026.
 
 ---
 
-**Built with 💡 for data-driven governance**
+**Built for data-driven governance**
