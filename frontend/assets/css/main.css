@@ -689,3 +689,24 @@ footer a:hover {
 .custom-scroll::-webkit-scrollbar-thumb:hover {
     background: var(--gray-500);
 }
+/* Language Selector Styling */
+#language-selector {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#language-selector:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+#language-selector option {
+    background: #1e40af;
+    color: white;
+    padding: 0.5rem;
+}

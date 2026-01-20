@@ -146,100 +146,113 @@ class ChatInterface {
     }
 
     /**
-     * Send message
-     */
-    async sendMessage() {
-        const input = document.getElementById('chat-input');
-        if (!input) return;
+ * Send message with language preference
+ */
+async sendMessage() {
+    const input = document.getElementById('chat-input');
+    if (!input) return;
 
-        const question = input.value.trim();
-        if (!question) return;
+    let question = input.value.trim();
+    if (!question) return;
 
-        if (this.isLoading) {
-            this.showToast('Please wait for the current response...', 'warning');
-            return;
-        }
+    if (this.isLoading) {
+        this.showToast('Please wait for the current response...', 'warning');
+        return;
+    }
 
-        // Add user message
-        this.addMessage({
-            type: 'user',
-            content: question
-        });
+    // Get selected language
+    const languageSelector = document.getElementById('language-selector');
+    const selectedLanguage = languageSelector ? languageSelector.value : 'en';
 
-        // Clear input
-        input.value = '';
+    // Append language instruction to question if not English
+    if (selectedLanguage === 'hi') {
+        question = question + " (हिंदी में जवाब दें)"; // Respond in Hindi
+    } else if (selectedLanguage === 'te') {
+        question = question + " (తెలుగులో సమాధానం ఇవ్వండి)"; // Respond in Telugu
+    }
 
-        // Show loading
-        this.isLoading = true;
-        this.showTypingIndicator();
+    // Add user message (show original question without language suffix)
+    this.addMessage({
+        type: 'user',
+        content: input.value.trim()
+    });
 
-        try {
-            // Send to API
-            const response = await api.sendChatMessage(question);
+    // Clear input
+    input.value = '';
 
-            // Remove typing indicator
-            this.removeTypingIndicator();
+    // Show loading
+    this.isLoading = true;
+    this.showTypingIndicator();
 
-            if (response.success) {
-                // Add bot response
-                this.addMessage({
-                    type: 'bot',
-                    content: response.answer,
-                    chartData: response.chart_data
-                });
-            } else {
-                this.addMessage({
-                    type: 'bot',
-                    content: `❌ Sorry, I encountered an error: ${response.error || 'Unknown error'}`,
-                    isError: true
-                });
-            }
+    try {
+        // Send to API with language-appended question
+        const response = await api.sendChatMessage(question);
 
-        } catch (error) {
-            this.removeTypingIndicator();
+        // Remove typing indicator
+        this.removeTypingIndicator();
+
+        if (response.success) {
+            // Add bot response
             this.addMessage({
                 type: 'bot',
-                content: `❌ Failed to get response. Please check your connection and try again.`,
+                content: response.answer,
+                chartData: response.chart_data
+            });
+        } else {
+            this.addMessage({
+                type: 'bot',
+                content: `❌ Sorry, I encountered an error: ${response.error || 'Unknown error'}`,
                 isError: true
             });
-            console.error('Chat error:', error);
-        } finally {
-            this.isLoading = false;
         }
+
+    } catch (error) {
+        this.removeTypingIndicator();
+        this.addMessage({
+            type: 'bot',
+            content: `❌ Failed to get response. Please check your connection and try again.`,
+            isError: true
+        });
+        console.error('Chat error:', error);
+    } finally {
+        this.isLoading = false;
     }
+}
 
     /**
-     * Add message to chat
-     */
-    addMessage(message, scroll = true) {
-        this.messages.push(message);
+ * Add message to chat
+ */
+addMessage(message, scroll = true) {
+    this.messages.push(message);
 
-        const messagesContainer = document.getElementById('chat-messages');
-        if (!messagesContainer) return;
+    const messagesContainer = document.getElementById('chat-messages');
+    if (!messagesContainer) return;
 
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${message.type} mb-4 ${message.type === 'user' ? 'text-right' : ''}`;
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${message.type} mb-4 ${message.type === 'user' ? 'text-right' : ''}`;
 
-        const bubbleClass = message.type === 'user' 
-            ? 'bg-blue-500 text-white' 
-            : message.isError 
-                ? 'bg-red-50 text-red-800 border border-red-200'
-                : 'bg-gray-100 text-gray-800';
+    const bubbleClass = message.type === 'user' 
+        ? 'bg-blue-500 text-white' 
+        : message.isError 
+            ? 'bg-red-50 text-red-800 border border-red-200'
+            : 'bg-gray-100 text-gray-800';
 
-        messageDiv.innerHTML = `
-            <div class="inline-block max-w-3/4 px-4 py-3 rounded-lg ${bubbleClass} text-left">
-                ${message.content}
-                ${message.chartData ? this.renderChart(message.chartData) : ''}
-            </div>
-            <div class="text-xs text-gray-500 mt-1">${getTimestamp()}</div>
-        `;
+    // Build message HTML
+    let messageHTML = `
+        <div class="inline-block max-w-3/4 px-4 py-3 rounded-lg ${bubbleClass} text-left">
+            ${message.content}
+            ${message.chartData ? this.renderChart(message.chartData) : ''}
+        </div>
+        <div class="text-xs text-gray-500 mt-1">${getTimestamp()}</div>
+    `;
 
-        messagesContainer.appendChild(messageDiv);
+    messageDiv.innerHTML = messageHTML;
+    messagesContainer.appendChild(messageDiv);
 
-        if (scroll) {
-            this.scrollToBottom();
-        }
+    if (scroll) {
+        this.scrollToBottom();
     }
+}
 
     /**
      * Show typing indicator
@@ -275,25 +288,35 @@ class ChatInterface {
         }
     }
 
-    /**
-     * Render chart in chat
-     */
-    renderChart(chartData) {
-        if (!chartData) return '';
+   /**
+ * Render chart in chat message
+ */
+renderChart(chartData) {
+    if (!chartData) return '';
 
-        const chartId = `chat-chart-${Date.now()}`;
-        
-        setTimeout(() => {
-            chartManager.createChatChart(chartId, chartData);
-        }, 100);
+    const chartId = `chat-chart-${Date.now()}`;
+    
+    // Schedule chart creation after DOM update
+    setTimeout(() => {
+        const canvas = document.getElementById(chartId);
+        if (canvas) {
+            try {
+                new Chart(canvas, chartData);
+                console.log('✓ Chart rendered:', chartId);
+            } catch (error) {
+                console.error('Chart rendering error:', error);
+            }
+        } else {
+            console.error('Canvas not found:', chartId);
+        }
+    }, 100);
 
-        return `
-            <div class="mt-4 bg-white p-4 rounded">
-                <canvas id="${chartId}" style="max-height: 300px;"></canvas>
-            </div>
-        `;
-    }
-
+    return `
+        <div class="mt-4 bg-white p-4 rounded-lg border border-gray-200">
+            <canvas id="${chartId}" style="max-height: 300px;"></canvas>
+        </div>
+    `;
+}
     /**
      * Scroll to bottom
      */

@@ -1,197 +1,250 @@
 """
-Chart data generator for AI responses
+Enhanced Chart Data Generator
+Generates chart configurations for frontend rendering
 """
-from typing import Dict, Any, List, Optional
 
-
-class ChartGenerator:
-    """Generate chart configurations from query results"""
+def determine_chart_type(question: str, data: list, column_count: int) -> str:
+    """
+    Intelligently determine the best chart type based on question and data
+    """
+    question_lower = question.lower()
     
-    def determine_chart_type(self, question: str, data: List[Dict]) -> str:
-        """
-        Determine appropriate chart type based on question and data
-        
-        Args:
-            question: User's question
-            data: Query results
-            
-        Returns:
-            Chart type: 'bar', 'pie', 'line', 'scatter', 'table'
-        """
-        question_lower = question.lower()
-        
-        # Check data structure
-        if not data or len(data) == 0:
-            return 'table'
-        
-        num_rows = len(data)
-        num_cols = len(data[0].keys()) if data else 0
-        
-        # Comparison keywords → Bar chart
-        if any(word in question_lower for word in ['compare', 'ranking', 'top', 'worst', 'best']):
+    # Keywords for different chart types
+    comparison_keywords = ['compare', 'vs', 'versus', 'difference', 'contrast']
+    ranking_keywords = ['top', 'bottom', 'best', 'worst', 'highest', 'lowest', 'ranking']
+    distribution_keywords = ['distribution', 'breakdown', 'share', 'percentage', 'proportion']
+    trend_keywords = ['trend', 'over time', 'timeline', 'history', 'change']
+    
+    # Determine based on keywords
+    if any(keyword in question_lower for keyword in comparison_keywords):
+        return 'bar'  # Comparison chart
+    elif any(keyword in question_lower for keyword in ranking_keywords):
+        return 'horizontalBar'  # Ranking chart
+    elif any(keyword in question_lower for keyword in distribution_keywords):
+        return 'pie' if len(data) <= 10 else 'doughnut'
+    elif any(keyword in question_lower for keyword in trend_keywords):
+        return 'line'
+    
+    # Determine based on data structure
+    if column_count == 2:
+        # Two columns: likely label + value
+        if len(data) <= 5:
             return 'bar'
-        
-        # Distribution keywords → Pie chart
-        if any(word in question_lower for word in ['distribution', 'breakdown', 'percentage', 'proportion']):
-            if num_rows <= 10:  # Pie charts work best with few categories
-                return 'pie'
-        
-        # Trend keywords → Line chart
-        if any(word in question_lower for word in ['trend', 'over time', 'monthly', 'temporal']):
-            return 'line'
-        
-        # Correlation keywords → Scatter plot
-        if any(word in question_lower for word in ['correlation', 'relationship', 'vs']):
-            return 'scatter'
-        
-        # Default: Bar for small datasets, table for large
-        if num_rows <= 20:
-            return 'bar'
+        elif len(data) <= 10:
+            return 'horizontalBar'
+        else:
+            return 'table'  # Too many for chart
+    elif column_count >= 3:
+        # Multiple values per item
+        if len(data) <= 10:
+            return 'bar'  # Grouped bar chart
         else:
             return 'table'
     
-    def format_for_chart(self, data: List[Dict], chart_type: str) -> Optional[Dict[str, Any]]:
-        """
-        Format query results for Chart.js/Plotly
-        
-        Args:
-            data: Query results
-            chart_type: Type of chart
-            
-        Returns:
-            Chart configuration dict or None
-        """
-        if not data:
-            return None
-        
-        try:
-            if chart_type == 'bar':
-                return self._format_bar_chart(data)
-            elif chart_type == 'pie':
-                return self._format_pie_chart(data)
-            elif chart_type == 'line':
-                return self._format_line_chart(data)
-            elif chart_type == 'scatter':
-                return self._format_scatter_chart(data)
-            else:
-                return self._format_table(data)
-        except Exception as e:
-            print(f"Error formatting chart: {e}")
-            return None
+    # Default
+    return 'table'
+
+
+def format_for_chart(question: str, query_result: list) -> dict:
+    """
+    Format SQL query results into Chart.js compatible format
     
-    def _format_bar_chart(self, data: List[Dict]) -> Dict[str, Any]:
-        """Format data for bar chart"""
-        # Assume first column is label, second is value
-        keys = list(data[0].keys())
+    Args:
+        question: User's original question
+        query_result: List of tuples/dicts from SQL query
         
-        # Try to find label and value columns
-        label_col = keys[0]
-        value_col = keys[1] if len(keys) > 1 else keys[0]
+    Returns:
+        dict: Chart.js configuration or None if not suitable for charting
+    """
+    if not query_result or len(query_result) == 0:
+        return None
+    
+    # Convert to list of dicts if needed
+    if isinstance(query_result[0], tuple):
+        # Can't easily determine column names from tuples
+        # Skip chart generation for now
+        return None
+    
+    # Get column names
+    first_row = query_result[0]
+    if not isinstance(first_row, dict):
+        return None
+    
+    columns = list(first_row.keys())
+    column_count = len(columns)
+    
+    # Need at least 2 columns (label + value)
+    if column_count < 2:
+        return None
+    
+    # Determine chart type
+    chart_type = determine_chart_type(question, query_result, column_count)
+    
+    if chart_type == 'table':
+        return None  # Too complex for chart, return None
+    
+    # Extract data
+    labels = []
+    datasets = []
+    
+    # Identify label column (usually first text column or column named 'state', 'district', etc.)
+    label_column = None
+    value_columns = []
+    
+    for col in columns:
+        col_lower = col.lower()
+        if col_lower in ['state', 'district', 'name', 'label', 'category']:
+            label_column = col
+        elif col_lower not in ['z_score', 'bio_ratio', 'count', 'total', 'avg', 'enrollments', 'updates', 'ratio']:
+            # If no explicit label column found, use first column
+            if label_column is None and isinstance(first_row[col], str):
+                label_column = col
         
-        labels = [str(row[label_col]) for row in data]
-        values = [float(row[value_col]) if row[value_col] is not None else 0 for row in data]
+        # Value columns (numeric)
+        if isinstance(first_row[col], (int, float)) and col != label_column:
+            value_columns.append(col)
+    
+    # If no label column identified, use first column
+    if label_column is None:
+        label_column = columns[0]
+    
+    # If no value columns, use all non-label columns
+    if not value_columns:
+        value_columns = [col for col in columns if col != label_column]
+    
+    # Build labels
+    for row in query_result:
+        label = str(row[label_column])
+        # Truncate long labels
+        if len(label) > 30:
+            label = label[:27] + '...'
+        labels.append(label)
+    
+    # Build datasets
+    colors = [
+        'rgba(59, 130, 246, 0.8)',   # Blue
+        'rgba(239, 68, 68, 0.8)',     # Red
+        'rgba(16, 185, 129, 0.8)',    # Green
+        'rgba(251, 191, 36, 0.8)',    # Yellow
+        'rgba(139, 92, 246, 0.8)',    # Purple
+        'rgba(236, 72, 153, 0.8)',    # Pink
+    ]
+    
+    for idx, col in enumerate(value_columns):
+        dataset_data = []
+        for row in query_result:
+            value = row[col]
+            # Handle None values
+            if value is None:
+                value = 0
+            # Round floats
+            if isinstance(value, float):
+                value = round(value, 2)
+            dataset_data.append(value)
         
-        return {
-            "type": "bar",
-            "data": {
-                "labels": labels,
-                "datasets": [{
-                    "label": value_col.replace('_', ' ').title(),
-                    "data": values,
-                    "backgroundColor": "rgba(59, 130, 246, 0.8)"
-                }]
+        # Format label nicely
+        dataset_label = col.replace('_', ' ').title()
+        
+        datasets.append({
+            'label': dataset_label,
+            'data': dataset_data,
+            'backgroundColor': colors[idx % len(colors)],
+            'borderColor': colors[idx % len(colors)].replace('0.8', '1'),
+            'borderWidth': 2
+        })
+    
+    # Build chart config
+    chart_config = {
+        'type': chart_type,
+        'data': {
+            'labels': labels,
+            'datasets': datasets
+        },
+        'options': {
+            'responsive': True,
+            'maintainAspectRatio': False,
+            'plugins': {
+                'legend': {
+                    'display': len(datasets) > 1,
+                    'position': 'top'
+                },
+                'title': {
+                    'display': True,
+                    'text': _generate_chart_title(question)
+                }
             },
-            "options": {
-                "responsive": True,
-                "indexAxis": "y" if len(labels) > 5 else "x"  # Horizontal if many items
-            }
+            'scales': {}
         }
+    }
     
-    def _format_pie_chart(self, data: List[Dict]) -> Dict[str, Any]:
-        """Format data for pie chart"""
-        keys = list(data[0].keys())
-        label_col = keys[0]
-        value_col = keys[1] if len(keys) > 1 else keys[0]
-        
-        labels = [str(row[label_col]) for row in data]
-        values = [float(row[value_col]) if row[value_col] is not None else 0 for row in data]
-        
-        return {
-            "type": "pie",
-            "data": {
-                "labels": labels,
-                "datasets": [{
-                    "data": values,
-                    "backgroundColor": [
-                        "rgba(59, 130, 246, 0.8)",
-                        "rgba(16, 185, 129, 0.8)",
-                        "rgba(251, 191, 36, 0.8)",
-                        "rgba(239, 68, 68, 0.8)",
-                        "rgba(139, 92, 246, 0.8)"
-                    ]
-                }]
+    # Add scales based on chart type
+    if chart_type in ['bar', 'horizontalBar', 'line']:
+        if chart_type == 'horizontalBar':
+            chart_config['options']['indexAxis'] = 'y'
+            chart_config['options']['scales'] = {
+                'x': {
+                    'beginAtZero': True
+                }
             }
-        }
-    
-    def _format_line_chart(self, data: List[Dict]) -> Dict[str, Any]:
-        """Format data for line chart"""
-        keys = list(data[0].keys())
-        label_col = keys[0]
-        value_col = keys[1] if len(keys) > 1 else keys[0]
-        
-        labels = [str(row[label_col]) for row in data]
-        values = [float(row[value_col]) if row[value_col] is not None else 0 for row in data]
-        
-        return {
-            "type": "line",
-            "data": {
-                "labels": labels,
-                "datasets": [{
-                    "label": value_col.replace('_', ' ').title(),
-                    "data": values,
-                    "borderColor": "rgba(59, 130, 246, 1)",
-                    "tension": 0.4
-                }]
+        else:
+            chart_config['options']['scales'] = {
+                'y': {
+                    'beginAtZero': True
+                }
             }
-        }
     
-    def _format_scatter_chart(self, data: List[Dict]) -> Dict[str, Any]:
-        """Format data for scatter plot"""
-        keys = list(data[0].keys())
-        
-        # Assume columns are x, y values
-        x_col = keys[0] if len(keys) > 0 else None
-        y_col = keys[1] if len(keys) > 1 else None
-        
-        points = [{
-            "x": float(row[x_col]) if row[x_col] is not None else 0,
-            "y": float(row[y_col]) if row[y_col] is not None else 0
-        } for row in data]
-        
-        return {
-            "type": "scatter",
-            "data": {
-                "datasets": [{
-                    "label": f"{y_col} vs {x_col}",
-                    "data": points,
-                    "backgroundColor": "rgba(59, 130, 246, 0.8)"
-                }]
-            }
-        }
-    
-    def _format_table(self, data: List[Dict]) -> Dict[str, Any]:
-        """Format data as table"""
-        if not data:
-            return {"type": "table", "data": []}
-        
-        columns = list(data[0].keys())
-        
-        return {
-            "type": "table",
-            "columns": columns,
-            "data": data
-        }
+    return chart_config
 
 
-# Create chart generator instance
-chart_generator = ChartGenerator()
+def _generate_chart_title(question: str) -> str:
+    """Generate a nice chart title from the question"""
+    # Remove question words
+    title = question
+    remove_words = ['what', 'show', 'me', 'the', 'please', 'can you', 'could you', '?']
+    
+    for word in remove_words:
+        title = title.replace(word, '')
+    
+    # Capitalize and clean
+    title = ' '.join(title.split())
+    if len(title) > 60:
+        title = title[:57] + '...'
+    
+    return title.strip().title()
+
+
+def should_generate_chart(question: str, result_count: int) -> bool:
+    """
+    Determine if a chart should be generated for this query
+    
+    Args:
+        question: User's question
+        result_count: Number of rows in result
+        
+    Returns:
+        bool: True if chart should be generated
+    """
+    question_lower = question.lower()
+    
+    # Always generate charts for these keywords
+    chart_keywords = [
+        'compare', 'show', 'top', 'bottom', 'ranking', 'list',
+        'distribution', 'breakdown', 'vs', 'versus', 'trend'
+    ]
+    
+    if any(keyword in question_lower for keyword in chart_keywords):
+        # But only if reasonable number of results
+        if 2 <= result_count <= 50:
+            return True
+    
+    # Don't generate charts for these
+    no_chart_keywords = [
+        'how many', 'count', 'total', 'sum', 'average',
+        'explain', 'why', 'what is', 'define'
+    ]
+    
+    if any(keyword in question_lower for keyword in no_chart_keywords):
+        return False
+    
+    # Default: generate if between 2-20 results
+    return 2 <= result_count <= 20
